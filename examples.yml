@@ -1,0 +1,45 @@
+policies:
+    - name: p001-sg-unrestricted-ssh-access
+      resource: aws.security-group
+      description: |
+        Ensure no AWS EC2 security group allows unrestricted inbound access to TCP port 22 (SSH).
+      filters:
+        - type: ingress
+          Ports: [22]
+          Cidr:
+            value:
+              - "0.0.0.0/0"
+              - "::/0"
+            op: in
+        - "tag:sg-unrestricted-ssh-access": absent
+      actions:
+        - type: tag
+          key:  sg-unrestricted-ssh-access
+          value: violation
+
+    - name: p002-sg-unrestricted-ssh-access-cloudtrail
+      resource: aws.security-group
+      description: |
+        Ensure no AWS EC2 security group allows unrestricted inbound access to TCP port 22 (SSH).
+        Watches cloudtrail events for new or updated security groups and tag if they have open
+        access. NOTE: write one to untag as they remove the open access
+      mode:
+        type: cloudtrail
+        events:
+          - source: ec2.amazonaws.com
+            event: AuthorizeSecurityGroupIngress
+            ids: "requestParameters.groupId"
+        role: CustodianLambda
+      filters:
+        - type: ingress
+          Ports: [22]
+          Cidr:
+            value:
+              - "0.0.0.0/0"
+              - "::/0"
+            op: in
+        - "tag:sg-unrestricted-ssh-access": absent
+      actions:
+        - type: tag
+          key:  sg-unrestricted-ssh-access
+          value: violation

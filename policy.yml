@@ -1,3 +1,9 @@
 policies:
-  - name: aws-vpcs
-    resource: aws.vpc
+  - name: check-mark-for-op
+    resource: aws.ec2
+    filters:
+      - "tag:Custodian": present
+    actions:
+      - type: mark-for-op
+        op: stop
+        days: 1
